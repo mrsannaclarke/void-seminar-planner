@@ -27,7 +27,7 @@
   <section class="metrics"><div class="metric"><b id="scheduledCount">0</b><span>scheduled classes</span></div><div class="metric"><b id="openHours">0</b><span>open room-hours</span></div><div class="metric"><b id="seatHours">0</b><span>open seat-hours</span></div><div class="metric"><b id="conflictCount">0</b><span>schedule conflicts</span></div><div class="metric"><b id="poolCount">0</b><span>unscheduled ideas</span></div></section>
   <div class="notice" id="notice"></div>
   <main>
-    <aside class="sidebar panel"><div class="panel-head"><div><h2>Unscheduled seminars</h2><div class="small">Drag to schedule · or tap a card, then tap a time</div></div></div><div id="pool"></div><div class="legend"><span><i class="dot p1"></i>Most likely</span><span><i class="dot p2"></i>Second likely</span><span><i class="dot p3"></i>Possible return</span><span><i class="dot p4"></i>Other idea</span></div></aside>
+    <aside class="sidebar panel"><div class="panel-head"><div><h2>Unscheduled seminars</h2><div class="small">Drag to schedule · or tap a card, then tap a time</div></div></div><div id="pool"></div><div class="legend"><span><i class="dot p1"></i>Most likely</span><span><i class="dot p2"></i>Second likely</span><span><i class="dot p3"></i>Last year / return</span><span><i class="dot p4"></i>Other idea</span></div></aside>
     <section class="board panel"><div class="panel-head"><div><h2>Weekend room plan</h2><div class="small">Festival guide: Fri 2–10 · Sat 12–10 · Sun 12–6</div></div><div class="small">Capacity: Bunker 25 · Think Tank 15</div></div><div class="days" id="grid"></div></section>
   </main>
   <dialog id="editor"><form method="dialog" class="form" id="form"><h3>Seminar details</h3><input type="hidden" id="editId"><label class="field wide">Instructor<input id="instructor" required></label><label class="field wide">Subject<input id="subject"></label><label class="field">Duration<select id="duration"><option value="1.5">90 minutes</option><option value="2">2 hours</option><option value="2.5">2.5 hours</option><option value="3">3 hours</option><option value="5">5 hours</option><option value="6">6 hours</option></select></label><label class="field">Priority<select id="priority"><option value="1">Most likely</option><option value="2">Second most likely</option><option value="3">Possible return</option><option value="4">Other idea</option></select></label><div class="form-actions"><button class="btn light" value="cancel">Cancel</button><button class="btn primary" id="save" value="default">Save</button></div></form></dialog>
@@ -42,6 +42,14 @@
     {id:'chris',instructor:'Chris Conn',subject:'Drawing Seminar',duration:2,priority:3},
     {id:'bill',instructor:'Bill Canales',subject:'Seminar',duration:2,priority:1},
     {id:'shawn',instructor:'Shawn Barber',subject:'Skull Painting in Oil',duration:2,priority:3},
+    {id:'deb',instructor:'Deb Yarian',subject:'Talk & Q&A w/ Deb',duration:3,priority:3},
+    {id:'jessie-foundations',instructor:'Jessie Fora',subject:'Foundations of Lettering',duration:2,priority:3},
+    {id:'jessie-irene-script',instructor:'Jessie Fora & Irene Shiori',subject:'Stylized Script',duration:3,priority:3},
+    {id:'juan-machine-1',instructor:'Juan Puente',subject:'Tattoo Machine',duration:5,priority:3},
+    {id:'jenna-finance',instructor:'Jenna Goldin',subject:'Freelance Finance',duration:2,priority:3},
+    {id:'dan-coil',instructor:'Dan Gilsdorf',subject:'Coil Machine Fundamentals',duration:2,priority:3},
+    {id:'juan-machine-2',instructor:'Juan Puente',subject:'Tattoo Machine (second session)',duration:5,priority:3},
+    {id:'jessie-vic-design',instructor:'Jessie Jay & Vic Steinman',subject:'Graphic Design',duration:3,priority:3},
     {id:'tamara',instructor:'Tamara Santibanez',subject:'',duration:2,priority:4},
     {id:'christy',instructor:'Christy Fish',subject:'Cover-ups',duration:2,priority:4},
     {id:'liz',instructor:'Liz Cook',subject:'Color theory and pigment mixing',duration:3,priority:4},
@@ -49,6 +57,9 @@
   ];
   const STORAGE_KEY='void-seminar-plan-v2';
   let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')||structuredClone(defaults), dragId=null, selectedId=null;
+  defaults.forEach(item=>{if(!items.some(existing=>existing.id===item.id))items.push(structuredClone(item))});
+  const LAST_YEAR_IDS=['deb','jessie-foundations','jessie-irene-script','juan-machine-1','jenna-finance','evan','chris','dan-coil','juan-machine-2','jessie-vic-design','shawn'];
+  items.forEach(item=>{if(LAST_YEAR_IDS.includes(item.id))item.priority=3});
   const $=s=>document.querySelector(s), fmt=t=>{let h=Math.floor(t),m=t%1?':30':':00',ap=h>=12?'PM':'AM';h=h%12||12;return h+m+' '+ap};
   function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(items))}
   function render(){renderPool();renderGrid();metrics();saveState()}
