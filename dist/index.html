@@ -48,7 +48,6 @@
     {id:'juan-machine-1',instructor:'Juan Puente',subject:'Tattoo Machine',duration:5,priority:3},
     {id:'jenna-finance',instructor:'Jenna Goldin',subject:'Freelance Finance',duration:2,priority:3},
     {id:'dan-coil',instructor:'Dan Gilsdorf',subject:'Coil Machine Fundamentals',duration:2,priority:3},
-    {id:'juan-machine-2',instructor:'Juan Puente',subject:'Tattoo Machine (second session)',duration:5,priority:3},
     {id:'jessie-vic-design',instructor:'Jessie Jay & Vic Steinman',subject:'Graphic Design',duration:3,priority:3},
     {id:'tamara',instructor:'Tamara Santibanez',subject:'',duration:2,priority:4},
     {id:'christy',instructor:'Christy Fish',subject:'Cover-ups',duration:2,priority:4},
@@ -57,8 +56,9 @@
   ];
   const STORAGE_KEY='void-seminar-plan-v2';
   let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null')||structuredClone(defaults), dragId=null, selectedId=null;
+  items=items.filter(item=>item.id!=='juan-machine-2');
   defaults.forEach(item=>{if(!items.some(existing=>existing.id===item.id))items.push(structuredClone(item))});
-  const LAST_YEAR_IDS=['deb','jessie-foundations','jessie-irene-script','juan-machine-1','jenna-finance','evan','chris','dan-coil','juan-machine-2','jessie-vic-design','shawn'];
+  const LAST_YEAR_IDS=['deb','jessie-foundations','jessie-irene-script','juan-machine-1','jenna-finance','evan','chris','dan-coil','jessie-vic-design','shawn'];
   items.forEach(item=>{if(LAST_YEAR_IDS.includes(item.id))item.priority=3});
   const $=s=>document.querySelector(s), fmt=t=>{let h=Math.floor(t),m=t%1?':30':':00',ap=h>=12?'PM':'AM';h=h%12||12;return h+m+' '+ap};
   function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(items))}
