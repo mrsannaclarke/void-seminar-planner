@@ -31,7 +31,7 @@
     <aside class="sidebar panel"><div class="panel-head"><div><h2>Unscheduled seminars</h2><div class="small">Drag or tap to schedule · Copy makes another card</div></div></div><div id="pool"></div><div class="legend"><span><i class="dot"></i>All seminar cards</span></div></aside>
     <section class="board panel"><div class="panel-head"><div><h2>Weekend room plan</h2><div class="small">Loose festival guide: Fri 2–10 · Sat 12–10 · Sun 12–6. You can schedule outside the highlighted hours.</div></div><div class="small">Capacity: Bunker 30 · Think Tank 15</div></div><div class="days" id="grid"></div></section>
   </main>
-  <dialog id="editor"><form method="dialog" class="form" id="form"><h3>Seminar details</h3><input type="hidden" id="editId"><label class="field wide">Instructor<input id="instructor" required></label><label class="field wide">Subject<input id="subject"></label><label class="field">Duration<select id="duration"><option value="1.5">90 minutes</option><option value="2">2 hours</option><option value="2.5">2.5 hours</option><option value="3">3 hours</option><option value="5">5 hours</option><option value="6">6 hours</option></select></label><label class="field">Priority<select id="priority"><option value="1">Most likely</option><option value="2">Second most likely</option><option value="3">Possible return</option><option value="4">Other idea</option></select></label><div class="form-actions"><button class="btn light" value="cancel">Cancel</button><button class="btn primary" id="save" value="default">Save</button></div></form></dialog>
+  <dialog id="editor"><form method="dialog" class="form" id="form"><h3>Seminar details</h3><input type="hidden" id="editId"><label class="field wide">Instructor<input id="instructor" required></label><label class="field wide">Subject<input id="subject"></label><label class="field">Duration (hours)<input id="duration" type="number" min="0.5" max="15" step="0.5" inputmode="decimal" required></label><label class="field">Priority<select id="priority"><option value="1">Most likely</option><option value="2">Second most likely</option><option value="3">Possible return</option><option value="4">Other idea</option></select></label><div class="form-actions"><button class="btn light" value="cancel">Cancel</button><button class="btn primary" id="save" value="default">Save</button></div></form></dialog>
   <script>
   const TIMES={Friday:[14,22],Saturday:[12,22],Sunday:[12,18]}, GRID_START=9, GRID_END=24, ROOMS={bunker:{name:'Bunker',cap:30},think:{name:'Think Tank',cap:15}}, DAYS=['Friday','Saturday','Sunday'];
   const defaults=[
@@ -41,7 +41,7 @@
     {id:'jaylind',instructor:'Jaylind',subject:'Skin Deep seminar',duration:2.5,priority:1},
     {id:'evan',instructor:'Evan Wilson',subject:'Calligraphy',duration:3,priority:3},
     {id:'chris',instructor:'Chris Conn',subject:'Drawing Seminar',duration:2,priority:3},
-    {id:'bill',instructor:'Bill Canales',subject:'Seminar',duration:2,priority:1},
+    {id:'bill',instructor:'Bill Canales',subject:'Seminar',duration:7,priority:1},
     {id:'shawn',instructor:'Shawn Barber',subject:'Skull Painting in Oil',duration:2,priority:3,bunkerCap:25},
     {id:'deb',instructor:'Deb Yarian',subject:'Talk & Q&A w/ Deb',duration:3,priority:3},
     {id:'jessie-foundations',instructor:'Jessie Fora',subject:'Foundations of Lettering',duration:2,priority:3},
@@ -60,6 +60,8 @@
   items=items.filter(item=>item.id!=='juan-machine-2');
   defaults.forEach(item=>{if(!items.some(existing=>existing.id===item.id))items.push(structuredClone(item))});
   let paintingClass=items.find(item=>item.id==='shawn');if(paintingClass)paintingClass.bunkerCap=25;
+  const BILL_DURATION_MIGRATION_KEY='void-seminar-bill-7-v1';
+  if(!localStorage.getItem(BILL_DURATION_MIGRATION_KEY)){let billClass=items.find(item=>item.id==='bill');if(billClass)billClass.duration=7;localStorage.setItem(BILL_DURATION_MIGRATION_KEY,'1')}
   const LAST_YEAR_IDS=['deb','jessie-foundations','jessie-irene-script','juan-machine-1','jenna-finance','evan','chris','dan-coil','jessie-vic-design','shawn'];
   items.forEach(item=>{if(LAST_YEAR_IDS.includes(item.id))item.priority=3});
   const $=s=>document.querySelector(s), fmt=t=>{let h=Math.floor(t),m=t%1?':30':':00',ap=h>=12?'PM':'AM';h=h%12||12;return h+m+' '+ap};
@@ -75,7 +77,7 @@
   function conflicts(a){if(!a.day)return false;return items.some(b=>b.id!==a.id&&b.day===a.day&&b.room===a.room&&a.start<b.start+b.duration&&b.start<a.start+a.duration)}
   function metrics(){let scheduled=items.filter(i=>i.day),used=scheduled.reduce((n,i)=>n+i.duration,0),total=(GRID_END-GRID_START)*DAYS.length*Object.keys(ROOMS).length,open=total-used,roomSeats=Object.values(ROOMS).reduce((n,room)=>n+room.cap,0),seatTotal=(GRID_END-GRID_START)*DAYS.length*roomSeats,seatUsed=scheduled.reduce((n,i)=>n+i.duration*capacityFor(i),0),conf=scheduled.filter(conflicts).length;$('#scheduledCount').textContent=scheduled.length;$('#openHours').textContent=open.toFixed(1);$('#seatHours').textContent=Math.round(seatTotal-seatUsed);$('#conflictCount').textContent=conf;$('#poolCount').textContent=items.length-scheduled.length;let note=$('#notice'),selected=items.find(i=>i.id===selectedId);note.className='notice'+(selected?' show selection':conf?' show':'');note.textContent=selected?`${selected.instructor} selected. Tap a room at the desired start time to place this ${selected.duration}-hour class. Tap the card again to cancel.`:conf?`${conf} class block${conf===1?'':'s'} overlap. Move the red-outlined cards to resolve.`:''}
   function openEditor(i={}){$('#editId').value=i.id||'';$('#instructor').value=i.instructor||'';$('#subject').value=i.subject||'';$('#duration').value=String(i.duration||2);$('#priority').value=String(i.priority||4);$('#editor').showModal()}
-  $('#add').onclick=()=>openEditor();$('#save').onclick=e=>{e.preventDefault();if(!$('#instructor').value.trim())return;let id=$('#editId').value,i=items.find(x=>x.id===id);if(!i){i={id:'s'+Date.now()};items.push(i)}Object.assign(i,{instructor:$('#instructor').value.trim(),subject:$('#subject').value.trim(),duration:+$('#duration').value,priority:+$('#priority').value});$('#editor').close();render()};
+  $('#add').onclick=()=>openEditor();$('#save').onclick=e=>{e.preventDefault();let duration=+$('#duration').value;if(!$('#instructor').value.trim()||!$('#form').reportValidity()||duration<.5||duration>15)return;let id=$('#editId').value,i=items.find(x=>x.id===id);if(!i){i={id:'s'+Date.now()};items.push(i)}Object.assign(i,{instructor:$('#instructor').value.trim(),subject:$('#subject').value.trim(),duration,priority:+$('#priority').value});$('#editor').close();render()};
   $('#reset').onclick=()=>{if(confirm('Reset to the original working plan? Your drag-and-drop changes will be removed.')){items=structuredClone(defaults);render()}};
   $('#export').onclick=()=>{let blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='void-seminar-plan.json';a.click();URL.revokeObjectURL(a.href)};
   render();
